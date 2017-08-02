@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-import io.iguaz.v3io.container.DoInContainer
+import io.iguaz.v3io.api.container.ContainerID
 import io.iguaz.v3io.kv.{KeyValueOperations, OverwriteMode, SimpleRow, UpdateEntry}
 
 object Main {
@@ -30,10 +30,16 @@ object Main {
 
     def requestIterator() = {
       var count = 0
+      var lastCycleStart = start
       Iterator.from(0).map { i =>
         if (count % printPeriod == 0) {
-          val secondPassed = (System.currentTimeMillis() - start) / 1000
-          println(s"$count entries written after $secondPassed seconds...")
+          val cycleStart = System.currentTimeMillis()
+          val secondPassed = (cycleStart - start) / 1000
+          val millisSinceLastCycle = cycleStart - lastCycleStart
+          val millisRate = if (count == 0) 0 else printPeriod / millisSinceLastCycle
+          val secondsRate = millisRate * 1000
+          println(s"[$secondsRate/sec]\t$count entries written after $secondPassed seconds...")
+          lastCycleStart = cycleStart
         }
         count += 1
         val row = SimpleRow(i.toString, Map("index" -> i.toLong))
@@ -44,13 +50,14 @@ object Main {
     val props = new Properties
     props.put("container-id", "1")
 
-    val responses = DoInContainer(props) { container =>
-      val kvOps = KeyValueOperations(container, Map.empty ++ maxInFlight.map(maxInFlightPropName -> _))
-      val responseFutureList = List.fill(parallelMassUpdates)(kvOps.update(requestIterator()))
-      val responsesFuture = Future.sequence(responseFutureList)
-
-      Await.result(responsesFuture, Duration.Inf)
-    }
+    //DoInContainer(props) { container =>
+    val params = Map.empty ++ maxInFlight.map(maxInFlightPropName -> _)
+    // val kvOps = KeyValueOperations(container, params)
+    val kvOps = KeyValueOperations(ContainerID(1), params)
+    val responseFutureList = List.fill(parallelMassUpdates)(kvOps.update(requestIterator()))
+    val responsesFuture = Future.sequence(responseFutureList)
+    val responses = Await.result(responsesFuture, Duration.Inf)
+    //}
     println(s"responses = $responses")
   }
 }
