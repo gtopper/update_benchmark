@@ -41,7 +41,7 @@ object Main {
     val kvOps = KeyValueOperations(ContainerID(1), params)
 
     val responseIteratorList = List.fill(parallelMassUpdates)(kvOps.updateItemsIterator(requestIterator()).map(_ => ()))
-    val responsesIterator = responseIteratorList.foldRight(Iterator[Unit]()) {
+    val responsesIterator = responseIteratorList.foldRight(Iterator.continually(())) {
       case (acc, x) => acc.zip(x).map(_ => ())
     }
     responsesIterator.zip(PrintPeriodIterator.create()).foreach(_ => ())
