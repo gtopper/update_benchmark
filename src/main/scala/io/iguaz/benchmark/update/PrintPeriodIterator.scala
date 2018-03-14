@@ -11,6 +11,8 @@ object PrintPeriodIterator extends LazyLogging {
 
   private val printPeriod = sys.props.getOrElse("print-period", "5000").toInt
 
+  logger.info(s"printPeriod=$printPeriod")
+
   def create(): Iterator[Unit] = {
     val start = System.currentTimeMillis()
     var lastCycleStart = start

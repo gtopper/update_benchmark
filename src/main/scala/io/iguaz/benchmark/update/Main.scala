@@ -2,6 +2,10 @@ package io.iguaz.benchmark.update
 
 import java.net.URI
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+
 import io.iguaz.v3io.api.container.ContainerID
 import io.iguaz.v3io.kv._
 
@@ -25,7 +29,7 @@ object Main {
     println(s"payloadSize = $payloadSize")
     println(s"capnpFactor = $capnpFactor")
 
-    def requestIterator() = Iterator.from(0).map { count =>
+    def requestIterator() = Iterator.from(0).zip(PrintPeriodIterator.create()).map(_._1).map { count =>
       val row = Row(count.toString, Map("index" -> count.toLong))
       UpdateEntry(collectionUri, row, OverwriteMode.REPLACE)
     }
@@ -37,10 +41,8 @@ object Main {
 
     val kvOps = KeyValueOperations(ContainerID(1), params)
 
-    val responseIteratorList = List.fill(parallelMassUpdates)(kvOps.updateItemsIterator(requestIterator()).map(_ => ()))
-    val responsesIterator = responseIteratorList.foldRight(Iterator.continually(())) {
-      case (acc, x) => acc.zip(x).map(_ => ())
-    }
-    responsesIterator.zip(PrintPeriodIterator.create()).foreach(_ => ())
+    val responseFutureList = List.fill(parallelMassUpdates)(kvOps.updateItems(requestIterator()))
+    val responsesFuture = Future.sequence(responseFutureList)
+    Await.result(responsesFuture, Duration.Inf)
   }
 }
