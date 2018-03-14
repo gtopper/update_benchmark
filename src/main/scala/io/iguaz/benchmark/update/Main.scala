@@ -9,9 +9,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val collectionUri = new URI("v3io", "", args(0))
-
-    val printPeriod = sys.props.get("print-period").map(_.toInt).getOrElse(10000)
+    val collectionUri = new URI("v3io", "1", args(0), null, null)
 
     val parallelMassUpdates = sys.props.get("parallel-mass-updates").map(_.toInt).getOrElse(1)
     val maxInFlightPropName = "v3io.config.kv.update.max-in-flight"
@@ -23,7 +21,6 @@ object Main {
 
     println(s"parallelMassUpdates = $parallelMassUpdates")
     println(s"collectionUri = $collectionUri")
-    println(s"printPeriod = $printPeriod")
     println(s"maxInFlightOption = $maxInFlightOption")
     println(s"payloadSize = $payloadSize")
     println(s"capnpFactor = $capnpFactor")
