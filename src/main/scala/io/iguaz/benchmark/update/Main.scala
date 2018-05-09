@@ -11,15 +11,12 @@ object Main {
     val collectionUri = new URI("v3io", "1", args(0), null, null)
 
     val parallelMassUpdates = sys.props.get("parallel-mass-updates").map(_.toInt).getOrElse(1)
-    val payloadSizePropName = "kv.update.payload.size"
-    val payloadSize = sys.props.get(payloadSizePropName).map(_.toLong)
     val capnpFactorPropName = "capn-message-size-ratio"
     val capnpFactor = sys.props.get(capnpFactorPropName).map(_.toInt)
     val domain = sys.props.get("domain").map(_.toInt).getOrElse(1024)
 
-    println(s"parallelMassUpdates = $parallelMassUpdates")
     println(s"collectionUri = $collectionUri")
-    println(s"payloadSize = $payloadSize")
+    println(s"parallelMassUpdates = $parallelMassUpdates")
     println(s"capnpFactor = $capnpFactor")
     println(s"domain = $domain")
 
@@ -44,9 +41,7 @@ object Main {
       UpdateEntry(collectionUri, row, OverwriteMode.REPLACE)
     }
 
-    val params = Map.empty ++
-      payloadSize.map(payloadSizePropName -> _) ++
-      capnpFactor.map(capnpFactorPropName -> _)
+    val params = Map.empty ++ capnpFactor.map(capnpFactorPropName -> _)
 
     val kvOps = KeyValueOperations(params)
 
