@@ -15,13 +15,31 @@ object Main {
     val payloadSize = sys.props.get(payloadSizePropName).map(_.toLong)
     val capnpFactorPropName = "capn-message-size-ratio"
     val capnpFactor = sys.props.get(capnpFactorPropName).map(_.toInt)
+    val domain = sys.props.get("domain").map(_.toInt).getOrElse(1024)
 
     println(s"parallelMassUpdates = $parallelMassUpdates")
     println(s"collectionUri = $collectionUri")
     println(s"payloadSize = $payloadSize")
     println(s"capnpFactor = $capnpFactor")
+    println(s"domain = $domain")
 
-    def requestIterator() = Iterator.from(0).map { count =>
+    val counterIterator = new Iterator[Int] {
+
+      private var current = 0
+
+      override def hasNext: Boolean = true
+
+      override def next(): Int = {
+        val res = current
+        current += 1
+        if (current >= domain) {
+          current = 0
+        }
+        res
+      }
+    }
+
+    def requestIterator() = counterIterator.map { count =>
       val row = Row(count.toString, Map("index" -> count.toLong))
       UpdateEntry(collectionUri, row, OverwriteMode.REPLACE)
     }
