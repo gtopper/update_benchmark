@@ -14,25 +14,33 @@ object Main {
     val capnpFactorPropName = "capn-message-size-ratio"
     val capnpFactor = sys.props.get(capnpFactorPropName).map(_.toInt)
     val domain = sys.props.get("domain").map(_.toInt).getOrElse(1024)
+    val stopAfter = sys.props.get("stop-after").map(_.toInt)
 
     println(s"collectionUri = $collectionUri")
     println(s"parallelMassUpdates = $parallelMassUpdates")
     println(s"capnpFactor = $capnpFactor")
     println(s"domain = $domain")
+    println(s"stopAfter = $stopAfter")
 
-    val counterIterator = new Iterator[Int] {
+    val counterIterator = {
+      val iter = new Iterator[Int] {
 
-      private var current = 0
+        private var current = 0
 
-      override def hasNext: Boolean = true
+        override def hasNext: Boolean = true
 
-      override def next(): Int = {
-        val res = current
-        current += 1
-        if (current >= domain) {
-          current = 0
+        override def next(): Int = {
+          val res = current
+          current += 1
+          if (current >= domain) {
+            current = 0
+          }
+          res
         }
-        res
+      }
+      stopAfter match {
+        case Some(n) => iter.take(n)
+        case None => iter
       }
     }
 
