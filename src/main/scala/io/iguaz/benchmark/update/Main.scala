@@ -15,12 +15,18 @@ object Main {
     val capnpFactor = sys.props.get(capnpFactorPropName).map(_.toInt)
     val domain = sys.props.get("domain").map(_.toInt).getOrElse(1024)
     val stopAfter = sys.props.get("stop-after").map(_.toInt)
+    val updateMode = sys.props.get("update-mode").map(_.toLowerCase).collect {
+      case "overwrite" => OverwriteMode.OVERWRITE
+      case "append" => OverwriteMode.APPEND
+      case "append_new" => OverwriteMode.APPEND_NEW
+    }.getOrElse(OverwriteMode.REPLACE)
 
     println(s"collectionUri = $collectionUri")
     println(s"parallelMassUpdates = $parallelMassUpdates")
     println(s"capnpFactor = $capnpFactor")
     println(s"domain = $domain")
     println(s"stopAfter = $stopAfter")
+    println(s"updateMode = $updateMode")
 
     val counterIterator = {
       val iter = new Iterator[Int] {
@@ -46,7 +52,7 @@ object Main {
 
     def requestIterator() = counterIterator.map { count =>
       val row = Row(count.toString, Map("index" -> count.toLong))
-      UpdateEntry(collectionUri, row, OverwriteMode.REPLACE)
+      UpdateEntry(collectionUri, row, updateMode)
     }
 
     val params = Map.empty ++ capnpFactor.map(capnpFactorPropName -> _)
