@@ -8,10 +8,10 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val collectionUri = new URI("v3io", "1", args(0), null, null)
+    val collectionUri = new URI(args(0))
 
     val parallelMassUpdates = sys.props.get("parallel-mass-updates").map(_.toInt).getOrElse(1)
-    val capnpFactorPropName = "capn-message-size-ratio"
+    val capnpFactorPropName = "capnp-message-size-ratio"
     val capnpFactor = sys.props.get(capnpFactorPropName).map(_.toInt)
     val domain = sys.props.get("domain").map(_.toInt).getOrElse(1024)
     val stopAfter = sys.props.get("stop-after").map(_.toInt)

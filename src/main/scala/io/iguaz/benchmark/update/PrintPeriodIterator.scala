@@ -25,7 +25,7 @@ object PrintPeriodIterator extends LazyLogging {
         val secondsRate = progress * 1000L / millisSinceLastCycle
         val secondsRateStr = numberFormat.format(secondsRate)
         val countStr = numberFormat.format(count)
-        logger.info(s"[$secondsRateStr/s] $countStr entries written after $secondPassedStr seconds...")
+        println(s"[$secondsRateStr/s] $countStr entries written after $secondPassedStr seconds...")
         lastCycleStart = cycleStart
         lastCount = count
       }
